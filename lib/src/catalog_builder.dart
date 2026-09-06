@@ -40,6 +40,7 @@ final class CatalogBuilder {
   CatalogBuilder({
     required this.widgetsRoot,
     this.vendorRoot,
+    this.repoRoot,
     this.vendorRef = 'main',
     DateTime Function()? now,
   }) : _now = now ?? (() => DateTime.now().toUtc());
@@ -50,6 +51,10 @@ final class CatalogBuilder {
   /// sources); the validator defaults it to `../vendor/js_widget_runtime`
   /// next to [widgetsRoot].
   final Directory? vendorRoot;
+
+  /// The catalog repo root holding `.gitmodules` + `vendor/external/<id>/`
+  /// (EXTERNAL widget sources); defaults to the parent of [widgetsRoot].
+  final Directory? repoRoot;
 
   /// The git ref (tag/sha) the vendor submodule is pinned at — used for
   /// the `preview` URLs of vendored widgets so the web preview runner
@@ -63,7 +68,11 @@ final class CatalogBuilder {
   /// the rolling release never ends up half-current, and a rejected build
   /// leaves no artifacts behind.
   CatalogResult build({required Directory outDir}) {
-    final results = validateWidgetsRoot(widgetsRoot, vendorRoot: vendorRoot);
+    final results = validateWidgetsRoot(
+      widgetsRoot,
+      vendorRoot: vendorRoot,
+      repoRoot: repoRoot,
+    );
     final fatal = [
       for (final result in results)
         for (final error in result.errors) error,
@@ -98,6 +107,11 @@ final class CatalogBuilder {
           'allowedCommands': manifest.allowedCommands.toList(),
         },
         'minRuntime': manifest.minRuntime,
+        if (result.externalSource != null)
+          'source': {
+            'repo': result.externalSource!.repo,
+            'commit': result.externalSource!.commit,
+          },
         if (manifest.icon.isNotEmpty) 'icon': manifest.icon,
         'zip': {
           'file': '$id-$version.zip',
@@ -136,10 +150,17 @@ final class CatalogBuilder {
   /// widget's manifest.json + widget.js. VENDORED widgets live in the
   /// runtime repo (the fa_widgets repo only holds the overlay — raw
   /// github does not follow submodules), pinned at [vendorRef] so the
-  /// preview shows exactly what shipped in the zip; LOCAL widgets live in
-  /// this repo on main.
+  /// preview shows exactly what shipped in the zip; EXTERNAL widgets live
+  /// in the user's public repo, pinned at the overlay's `source.commit`;
+  /// LOCAL widgets live in this repo on main.
   Map<String, String> _previewEntry(WidgetValidation result) {
     final id = result.manifest!.id;
+    final source = result.externalSource;
+    if (source != null) {
+      final base = 'https://raw.githubusercontent.com/${source.repo}/'
+          '${source.commit}';
+      return {'manifest': '$base/manifest.json', 'js': '$base/widget.js'};
+    }
     final vendored =
         File(p.join(result.directory.path, 'overlay.json')).existsSync();
     final base = vendored

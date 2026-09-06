@@ -1,6 +1,6 @@
 # Schema reference
 
-## Two widget kinds
+## Three widget kinds
 
 A `widgets/<id>/` folder is one of:
 
@@ -12,19 +12,59 @@ A `widgets/<id>/` folder is one of:
   `manifest.json` come from the `vendor/js_widget_runtime` submodule
   (`example/widgets/<id>/`, single source of truth). The merged manifest
   (base + overlay) is what validation, zips and `catalog.json` see.
+- **EXTERNAL** — `overlay.json` with a REQUIRED `source` block; the code
+  and the base `manifest.json` come from a per-widget git submodule at
+  `vendor/external/<id>/` — the author's own PUBLIC GitHub repo, pinned
+  at `source.commit`. This is how widgets published from the Fa app
+  arrive (the app pushes the widget to the user's repo and opens the PR
+  with the overlay + submodule pin).
 
-### `widgets/<id>/overlay.json` (vendored only)
+### `widgets/<id>/overlay.json` (vendored and external)
 
 | field | required | notes |
 |-------|----------|-------|
-| `icon` | yes (file must exist locally) | path inside the widget folder |
+| `icon` | yes (file must exist locally, or in the user repo for EXTERNAL) | path inside the widget folder |
 | `tags` | – | free-form, lowercased by CI |
 | `author` | – | defaults from the base manifest |
 | `minRuntime` | yes | runtime floor, strict semver |
 | `description` | – | overrides the base description |
+| `source` | **EXTERNAL: yes** — forbidden for VENDORED | `{"repo": "owner/name", "commit": "<40-hex sha>"}` |
 
 Any other key — especially `version` or `id` — is a validation ERROR:
 those are single-sourced from the submodule manifest.
+
+### EXTERNAL rules
+
+- `source.repo` must be a GitHub `owner/name` slug
+  (`[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+`); the repo MUST be public — catalog
+  CI clones external submodules anonymously.
+- `source.commit` must be a full 40-hex sha; the
+  `vendor/external/<id>/` submodule HEAD must equal it exactly (drift =
+  validation error — re-pin the submodule and update the overlay).
+- The submodule must be registered in the ROOT `.gitmodules` with
+  `path = vendor/external/<id>` and a url pointing at `source.repo`
+  (https or ssh form, `.git` suffix optional).
+- The repo holds a normal widget at its root: `manifest.json` (same
+  rules as a vendored CORE base manifest — `id` must equal the catalog
+  folder name) plus `widget.js` or the manifest-declared live-tile entry
+  (`widget.entry`). Version/id/permissions come from THAT manifest; the
+  overlay carries catalog meta only.
+
+Example:
+
+```json
+{
+  "icon": "icon.svg",
+  "tags": ["pomodoro"],
+  "author": "Octocat",
+  "minRuntime": "0.4.89",
+  "source": {"repo": "octocat/fa-widget-focus", "commit": "637c99a7909c70910ddcd0600d81d9a4f741c1ba"}
+}
+```
+
+The generated catalog entry carries the `source` block through (so the
+Fa app can link the origin repo), and preview URLs point at
+`raw.githubusercontent.com/<repo>/<commit>/…`.
 
 ## `widgets/<id>/manifest.json`
 

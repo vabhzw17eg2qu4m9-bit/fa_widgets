@@ -21,11 +21,15 @@ attached — stable permalinks and rollback points.
 ## Layout
 
 ```
-widgets/<id>/            one folder per widget, two kinds:
+widgets/<id>/            one folder per widget, three kinds:
     manifest.json + widget.js   LOCAL widgets (Fa-specific APIs, forks)
     overlay.json + icon.svg     VENDORED widgets — code + base manifest live in
                                 the runtime repo (single source of truth)
+    overlay.json with source    EXTERNAL widgets — code + manifest live in the
+                                author's public repo, vendored as a per-widget
+                                submodule (published from the Fa app)
 vendor/js_widget_runtime   git submodule: flutter_js_widget_runtime (CORE sources)
+vendor/external/<id>       git submodules: one per EXTERNAL widget (user repos)
 lib/, bin/, test/          the Dart tooling that validates and packages the catalog
 docs/                      schema notes
 .github/workflows/         validate.yml (PRs) · publish.yml (rolling release)
@@ -54,6 +58,17 @@ cannot drift (validator errors otherwise). Syncing = bumping the submodule
 pin (`git submodule update --remote vendor/js_widget_runtime` on a fresh
 runtime release tag) + push; CI rebuilds the changed zips. After cloning,
 run `git submodule update --init` once.
+
+### External (user) widgets
+
+Widgets published from the Fa app live in the AUTHOR's own public GitHub
+repo and arrive here as EXTERNAL widgets: `widgets/<id>/overlay.json`
+carries a required `source: {"repo": "owner/name", "commit": "<sha>"}`
+block and the code is pinned as a per-widget submodule at
+`vendor/external/<id>/` (registered in `.gitmodules`). Same
+single-source rule as CORE — version/id/permissions come from the widget's
+own `manifest.json` inside the submodule, the overlay is catalog meta only.
+The repo must be PUBLIC: catalog CI clones external submodules anonymously.
 
 ## Contributing a widget
 

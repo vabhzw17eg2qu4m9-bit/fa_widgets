@@ -22,6 +22,16 @@ dart run bin/fa_widgets.dart catalog --out build/catalog
   VENDORED: `overlay.json` + `icon.svg` (see `docs/schema.md` and
   `README.md` → "Vendored (CORE) widgets"). Do not copy the code.
 
+## Publishing from the Fa app
+
+You don't have to hand-author any of this: build the widget in the Fa app,
+connect GitHub once (Settings → GitHub account), then long-press the widget
+→ **Publish**. The app pushes the sources to a public repo under YOUR
+account, forks this catalog, and opens the PR for you — an EXTERNAL widget:
+`widgets/<id>/overlay.json` with a `source: {repo, commit}` pin plus the
+`vendor/external/<id>/` submodule (see `docs/schema.md`). Review and merge
+stay manual; the PR's status and reviewer comments show up in the app.
+
 ## Authoring checklist
 
 - [ ] Folder `widgets/<id>/`, lowercase-hyphen id == folder name.
