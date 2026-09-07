@@ -1,3 +1,6 @@
 [submodule "vendor/js_widget_runtime"]
 	path = vendor/js_widget_runtime
 	url = https://github.com/IstiN/flutter_js_widget_runtime.git
+[submodule "vendor/external/pomodoro-demo"]
+	path = vendor/external/pomodoro-demo
+	url = https://github.com/IstiN/fa-widget-pomodoro-demo.git

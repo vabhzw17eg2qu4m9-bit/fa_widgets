@@ -1,0 +1,14 @@
+{
+  "icon": "icon.svg",
+  "description": "A simple Pomodoro timer demo",
+  "tags": [
+    "productivity",
+    "timer",
+    "demo"
+  ],
+  "author": "IstiN",
+  "source": {
+    "repo": "IstiN/fa-widget-pomodoro-demo",
+    "commit": "17db7b849dcafab4de7d78cca2da52be5c68a54f"
+  }
+}
