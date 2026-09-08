@@ -1,0 +1,13 @@
+{
+  "icon": "icon.svg",
+  "description": "Issue #35 E2E-1 verification widget.",
+  "tags": [
+    "e2e"
+  ],
+  "minRuntime": "0.4.79",
+  "author": "vabhzw17eg2qu4m9-bit",
+  "source": {
+    "repo": "vabhzw17eg2qu4m9-bit/fa-widget-e2e-scratch",
+    "commit": "c4e92661c8a992071359d32328724bd00ed9c15c"
+  }
+}
